@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jokes Hub - One Laugh at a Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/svg+xml" href="public/favicon.svg">
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        indigo: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
+                            500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/css">
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .joke-container {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+        .modal-enter {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        .reveal-anim {
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+    
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">J</div>
+                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">JokesHub</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Annoying Explicit Toggle -->
+                    <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-full px-3">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Explicit</span>
+                        <button id="explicit-toggle" class="w-10 h-5 bg-slate-300 dark:bg-slate-700 rounded-full relative transition-colors duration-300 focus:outline-none">
+                            <div id="toggle-knob" class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-300"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+        
+        <!-- Welcome Screen (Initial State) -->
+        <div id="welcome-screen" class="text-center max-w-xl reveal-anim">
+            <div class="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white text-4xl mb-8 mx-auto shadow-2xl shadow-indigo-500/40 transform -rotate-6">
+                😂
+            </div>
+            <h1 class="text-5xl font-black mb-6 tracking-tight">Need a <span class="text-indigo-600 dark:text-indigo-400">Break?</span></h1>
+            <p class="text-lg text-slate-500 dark:text-slate-400 mb-10 leading-relaxed">
+                Life is better when you're laughing. We've got a vault full of jokes waiting for you. Ready to smile?
+            </p>
+            <button id="start-laughing" class="px-12 py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[2rem] font-black text-xl transition-all transform hover:scale-105 shadow-2xl shadow-indigo-500/30">
+                Laugh!
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="hidden text-center">
+            <div class="w-16 h-16 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin mb-4 mx-auto"></div>
+            <p class="text-slate-500 animate-pulse">Finding a joke...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden max-w-sm w-full bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 text-center shadow-xl">
+            <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-6 mx-auto text-2xl">!</div>
+            <h2 class="text-xl font-bold mb-2">Something went wrong</h2>
+            <p id="error-message" class="text-slate-500 mb-6 text-sm"></p>
+            <button onclick="fetchJoke()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-indigo-500/25">
+                Try Again
+            </button>
+        </div>
+
+        <!-- Single Joke Display -->
+        <div id="joke-display" class="w-full max-w-xl hidden">
+            <!-- Joke content injected here -->
+        </div>
+
+        <!-- Navigation (Hidden initially) -->
+        <div id="controls" class="mt-12 flex flex-col items-center gap-6 hidden">
+            <button id="next-joke" class="group px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-bold text-lg transition-all transform hover:scale-105 shadow-xl shadow-indigo-500/30 flex items-center gap-3">
+                <span>Tell Me Another!</span>
+                <svg class="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+            <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Single Laugh Edition</p>
+        </div>
+    </main>
+
+    <!-- Modal 1: Warning -->
+    <div id="modal-warning" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-8 shadow-2xl modal-enter border border-slate-200 dark:border-slate-800">
+            <div class="text-amber-500 mb-4">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">Wait a Minute!</h3>
+            <p class="text-slate-500 dark:text-slate-400 mb-6">You are about to enable explicit jokes. Are you sure you want to proceed to the next confirmation?</p>
+            <div class="flex flex-col gap-3">
+                <button id="modal-warning-yes" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold transition-all">Yes, Show Me More</button>
+                <button id="modal-warning-no" class="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all">Actually, No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Final Confirmation -->
+    <div id="modal-confirm" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-8 shadow-2xl modal-enter border-2 border-red-500/50">
+            <h3 class="text-2xl font-bold mb-2 text-red-600">Final Warning!</h3>
+            <p class="text-slate-500 dark:text-slate-400 mb-8">This is your LAST chance to back out. Explicit jokes might be offensive. By clicking 'I AM POSITIVE', you agree to be offended.</p>
+            <div class="flex flex-col gap-3">
+                <button id="modal-confirm-yes" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-lg transition-all animate-pulse">I AM POSITIVE</button>
+                <button id="modal-confirm-no" class="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all underline">Get me out of here!</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-8 text-center border-t border-slate-200 dark:border-slate-800">
+        <p class="text-slate-400 text-xs tracking-widest uppercase">Pure Comedy &bull; No Junk &bull; Just Laughter</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
